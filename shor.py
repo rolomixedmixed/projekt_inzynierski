@@ -9,6 +9,26 @@ from fractions import Fraction
 def apply_gate(handle, sv_ptr, n_qubits, matrix, target, control=[]):
     control_value=[1]*len(control)
 
+    workspace_size=custatevec.apply_matrix_get_workspace_size(
+        handle,
+        cuquantum.cudaDataType.CUDA_C_64F,
+        n_qubits,
+        matrix.data.ptr,
+        cuquantum.cudaDataType.CUDA_C_64F,
+        1,
+        0,
+        len(target),
+        len(control),
+        cuquantum.ComputeType.COMPUTE_64F,
+    )
+
+    workspace=None
+    workspace_ptr=0
+    if workspace_size>0:
+        workspace=cp.cuda.alloc(workspace_size)
+        workspace_ptr=workspace.ptr
+
+
     custatevec.apply_matrix(
         handle,
         sv_ptr,
@@ -24,8 +44,8 @@ def apply_gate(handle, sv_ptr, n_qubits, matrix, target, control=[]):
         control_value,
         len(control),
         cuquantum.ComputeType.COMPUTE_64F,
-        0,
-        0
+        workspace_ptr,
+        workspace_size
     )
 
 h_gate=cp.array([[1, 1],
@@ -71,7 +91,7 @@ def shors_algorithm(N):
         return math.gcd(x,N), N//math.gcd(x,N)
     
     L_qubits=math.ceil(math.log2(N))
-    t_qubits=2*L_qubits
+    t_qubits=L_qubits
     n_qubits=t_qubits+L_qubits
 
     sv=cp.zeros(2**n_qubits, dtype=cp.complex128)
@@ -112,7 +132,7 @@ def shors_algorithm(N):
     return factor1,factor2
 
 if __name__=='__main__':
-    N=15
+    N=1271
     factors=None
     attempts=0
 
