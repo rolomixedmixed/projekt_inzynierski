@@ -80,18 +80,19 @@ def phase_estimation(handle, sv_ptr, t_qubits, L_qubits, x, N):
     for idx in range(t_qubits):
         apply_gate(handle, sv_ptr, n_qubits, h_gate, [idx])
     for idx in range(t_qubits):
-        u_matrix=u_gate(x, idx, N, L_qubits)
+        power = t_qubits - 1 - idx
+        u_matrix=u_gate(x, power, N, L_qubits)
         apply_gate(handle, sv_ptr, n_qubits, u_matrix, t_register, [idx])
     iqft(handle, sv_ptr, n_qubits, 0, t_qubits-1)
 
 def shors_algorithm(N):
     x=random.randint(2,N-1)
     if math.gcd(x,N)>1:
-        print(f"znaleziono czynniki faktoryzacji {math.gcd(x,N)} i {N//math.gcd(x,N)}")
+        print(f"randomly found factors {math.gcd(x,N)} and {N//math.gcd(x,N)}")
         return math.gcd(x,N), N//math.gcd(x,N)
     
     L_qubits=math.ceil(math.log2(N))
-    t_qubits=L_qubits
+    t_qubits=2*L_qubits
     n_qubits=t_qubits+L_qubits
 
     sv=cp.zeros(2**n_qubits, dtype=cp.complex128)
@@ -108,15 +109,19 @@ def shors_algorithm(N):
     for i in range(len(probability)):
         reg1_prob[i%(2**t_qubits)]+=probability[i]
     
-    measured_value = np.argmax(reg1_prob)
+    reg1_prob = reg1_prob / np.sum(reg1_prob)
+
+    measured_value = np.random.choice(len(reg1_prob), p=reg1_prob)
 
     if measured_value==0:
         print("measured 0 value")
         return None
 
     phase=measured_value/(2**t_qubits)
-    fraction = fraction(phase).limit_denominator(N)
+    fraction = Fraction(phase).limit_denominator(N)
     r=fraction.denominator
+
+    print(f"measured value {measured_value}, phase {phase}, fraction {fraction}, r {r}")
 
     if pow(x,r,N) != 1:
         print("wrong order")
@@ -126,13 +131,17 @@ def shors_algorithm(N):
        print("r is uneven number") 
        return None
     
-    factor1=math.gcd(pow(x,r//2)-1,N)
-    factor2=math.gcd(pow(x,r//2)+1,N)
+    factor1=math.gcd(pow(int(x),r//2)-1,N)
+    factor2=math.gcd(pow(int(x),r//2)+1,N)
+
+    if factor1 == 1 or factor2 == 1:
+        print(f"found trivial factors for x={x}, retrying")
+        return None
 
     return factor1,factor2
 
 if __name__=='__main__':
-    N=1271
+    N=15
     factors=None
     attempts=0
 
