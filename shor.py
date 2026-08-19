@@ -135,13 +135,13 @@ def shors_algorithm(N):
     factor2=math.gcd(pow(int(x),r//2)+1,N)
 
     if factor1 == 1 or factor2 == 1:
-        print(f"found trivial factors for x={x}, retrying")
+        print(f"found trivial factors, retrying")
         return None
 
     return factor1,factor2
 
 if __name__=='__main__':
-    N=15
+    N=21
     factors=None
     attempts=0
 

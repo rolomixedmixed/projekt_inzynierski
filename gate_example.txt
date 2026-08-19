@@ -1,0 +1,18 @@
+cuquantum.custatevec.apply_matrix(
+    handle, #handle = custatevec.create() custatevec.destroy(handle)
+    sv,     #pointer to state vector, state.data.ptr
+    svDataType,     #cudaDataType.CUDA_C_32F/64F,
+    nIndexBits,     #total qubits, int
+    matrix,     #pointer to gate matrix, gate.data.ptr
+    matrixDataType,     #cudaDataType.CUDA_C_32F
+    layout,     #custatevec.MatrixLayout.ROW (lub COL)
+    adjoint,        #0=false, 1=true, gate(0) or its hermitian conjugate(1)
+    targets,        #target bits, [int]
+    nTargets,       #number of target bits, int 
+    controls,       #control bits, [int]
+    controlBitValues,       #values of control bits to activate gate, [int]
+    nControls,      #number of control bits
+    computeType,        #ComputeType.COMPUTE_32F (lub 64F)
+    extraWorkspace,     #workspace.ptr, 0 if without workspace buffer
+    extraWorkspaceSizeInBytes       #workspace size
+)
