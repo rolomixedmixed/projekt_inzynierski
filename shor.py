@@ -1,6 +1,6 @@
 import cupy as cp
 import cuquantum
-from cuquantum import custatevec
+from cuquantum.bindings import custatevec as custatevec
 import numpy as np
 import math
 import random
