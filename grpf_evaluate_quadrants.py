@@ -1,5 +1,5 @@
 import numpy as np
-from vinq import vinq
+from grpf_vinq import vinq
 
 def evaluate_quadrants(nodes, func):
     num_nodes = len(nodes)

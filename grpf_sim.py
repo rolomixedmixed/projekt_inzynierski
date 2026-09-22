@@ -1,10 +1,10 @@
-from Grover import grover_one_dir
-from rect_mesh import rect_grid
-from triangulation import triangulate
-from edge_directions import directions
-from evaluate_quadrants import evaluate_quadrants
-from fun import fun
-from visualisation import vis
+from grpf_Grover import grover_one_dir
+from grpf_rect_mesh import rect_grid
+from grpf_triangulation import triangulate
+from grpf_edge_directions import directions
+from grpf_evaluate_quadrants import evaluate_quadrants
+from grpf_fun import fun
+from grpf_visualisation import vis
 import numpy as np
 
 

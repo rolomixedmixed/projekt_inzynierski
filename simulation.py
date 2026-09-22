@@ -1,4 +1,4 @@
-from Grover import GroverAlgorithm
+from grpf_Grover import GroverAlgorithm
 import math
 import numpy as np
 import cupy as cp
