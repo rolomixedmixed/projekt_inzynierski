@@ -11,7 +11,7 @@ def fun(z):
     complex: Function value.
     """
     try:
-        w = (z-0.5)/((z+0.5)**2)
+        w = ((z - (4.0+3.0j))**2)*(z + 3.0)*((z + 1.0j)**3)*((z - 2.0)**2)*(z + (-2.0-1.0j))
     except:
         w=complex(np.inf, np.inf)
     return w

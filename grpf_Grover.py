@@ -178,6 +178,8 @@ class GroverAlgorithm:
             self.diffusion()
 
         probs_a=self.probabilities()
+        probs_a=cp.clip(probs_a, 0.0, None)
+        probs_a=probs_a/cp.sum(probs_a)
         shots=1024
         sampled_indices=cp.random.choice(1<<self.m, size=shots, p=probs_a)
         counts=cp.bincount(sampled_indices, minlength=(1<<self.m))
