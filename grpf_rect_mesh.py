@@ -31,9 +31,9 @@ def rect_grid(x_min, x_max, y_min, y_max, res):
     x = np.vstack([x, tx])
     y = np.vstack([y, ty])
 
-    NewNodesCoord = np.concatenate([x, y], axis=1)
+    NodesCoord = np.concatenate([x, y], axis=1)
 
-    return NewNodesCoord
+    return NodesCoord
 
 
 

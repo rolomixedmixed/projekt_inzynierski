@@ -9,15 +9,18 @@ from grpf_candidate_regions import regions
 from grpf_refine_mesh import refine_mesh
 from grpf_postprocessing import find_singularities
 import numpy as np
+import cupy as cp
 
 
 if __name__=="__main__":
     #grid generation
-    nodes=rect_grid(x_min=-8, x_max=8, y_min=-8, y_max=8, res=3)
+    nodes=rect_grid(x_min=-8, x_max=8, y_min=-8, y_max=8, res=1)
 
-    tolerance=1e-3
-    max_iterations=15
+    tolerance=1e-9
+    max_iterations=100
     iterations=0
+    start_event=cp.cuda.Event()
+    end_event=cp.cuda.Event()
 
     while True:
 
@@ -26,18 +29,28 @@ if __name__=="__main__":
         #triangulation, edges
         triangles, edges=triangulate(nodes)
 
-        #dividing into directions
-        e_alpha, e_beta, e_gama=directions(nodes, edges)
-
         #calculating quadrants
         quadrants=evaluate_quadrants(nodes, fun)
 
-        #applying grover for each direction
-        candidates_alpha=grover_one_dir(e_alpha, quadrants, "alpha")
-        candidates_beta=grover_one_dir(e_beta, quadrants, "beta")
-        candidates_gama=grover_one_dir(e_gama, quadrants, "gama")
+        start_event.record()
 
-        all_candidates=candidates_alpha+candidates_beta+candidates_gama
+        if iterations==1:
+            #dividing into directions
+            e_alpha, e_beta, e_gama=directions(nodes, edges)
+
+            #applying grover for each direction
+            candidates_alpha=grover_one_dir(e_alpha, quadrants, "alpha")
+            candidates_beta=grover_one_dir(e_beta, quadrants, "beta")
+            candidates_gama=grover_one_dir(e_gama, quadrants, "gama")
+
+            all_candidates=candidates_alpha+candidates_beta+candidates_gama
+
+        else:
+            phase_diff=np.mod(quadrants[edges[:,0]]-quadrants[edges[:,1]], 4)
+            all_candidates=edges[phase_diff==2].tolist()
+
+        end_event.record()
+        end_event.synchronize()
 
         if len(all_candidates)==0:
             print("No candidates found")
@@ -72,7 +85,9 @@ if __name__=="__main__":
     print("poles: ")
     for z, mult in poles:
         print("real: "+str(z.real)+" imag: "+str(z.imag)+" order: "+str(mult))
-    
+
+    elapsed_time_ms=cp.cuda.get_elapsed_time(start_event, end_event)
+    print("Elapsed time: "+str(elapsed_time_ms)+" ms")
 
     #visualise
     phase_diff=np.abs(quadrants[edges[:,0]]-quadrants[edges[:,1]]) 
