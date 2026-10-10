@@ -9,9 +9,11 @@ def fun(z):
 
     Returns:
     complex: Function value.
+
+    adapted from: https://github.com/PG-Group-Project-Quantum-Optimization/GRPF-quantum.git
     """
     try:
-        w = ((z - (4.0+3.0j))**2)*(z + 3.0)*((z + 1.0j)**3)*((z - 2.0)**2)*(z + (-2.0-1.0j))
+            w = (z - 1) * (z - 1j) ** 2 * (z + 1) ** 3 / (z + 1j)
     except:
         w=complex(np.inf, np.inf)
     return w

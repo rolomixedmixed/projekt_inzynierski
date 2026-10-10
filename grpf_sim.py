@@ -22,6 +22,8 @@ if __name__=="__main__":
     start_event=cp.cuda.Event()
     end_event=cp.cuda.Event()
 
+    start_event.record()
+
     while True:
 
         iterations+=1
@@ -31,8 +33,6 @@ if __name__=="__main__":
 
         #calculating quadrants
         quadrants=evaluate_quadrants(nodes, fun)
-
-        start_event.record()
 
         if iterations==1:
             #dividing into directions
@@ -48,9 +48,6 @@ if __name__=="__main__":
         else:
             phase_diff=np.mod(quadrants[edges[:,0]]-quadrants[edges[:,1]], 4)
             all_candidates=edges[phase_diff==2].tolist()
-
-        end_event.record()
-        end_event.synchronize()
 
         if len(all_candidates)==0:
             print("No candidates found")
@@ -74,6 +71,9 @@ if __name__=="__main__":
 
         nodes=refine_mesh(nodes, edges_to_split)
 
+    end_event.record()
+    end_event.synchronize()
+
     print("Found: "+str(len(all_candidates))+" candidates")
 
     zeros, poles=find_singularities(nodes, all_candidates, fun)
@@ -87,7 +87,7 @@ if __name__=="__main__":
         print("real: "+str(z.real)+" imag: "+str(z.imag)+" order: "+str(mult))
 
     elapsed_time_ms=cp.cuda.get_elapsed_time(start_event, end_event)
-    print("Elapsed time: "+str(elapsed_time_ms)+" ms")
+    print("Elapsed time: "+str(np.round(elapsed_time_ms, 2))+" ms")
 
     #visualise
     phase_diff=np.abs(quadrants[edges[:,0]]-quadrants[edges[:,1]]) 

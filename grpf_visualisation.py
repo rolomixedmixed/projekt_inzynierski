@@ -13,6 +13,8 @@ def vis(NodesCoord, Edges, Quadrants, PhasesDiff, it, Show=True, QuantumCandidat
         PhasesDiff [int]: Difference of phase between coordinates at the end of the edges described in Edges 
         QuantumCandidate: Edges candidate from quantum circuit.
         Show (bool): Whether to show the visualisation or wait for matplotlib.pyplot.show() after the function
+
+    Adapted from: https://github.com/PG-Group-Project-Quantum-Optimization/GRPF-quantum.git
     '''
     
     NoOfEdges = Edges.shape[0]

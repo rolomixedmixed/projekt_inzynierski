@@ -7,6 +7,8 @@ def vinq(f):
 
     Returns:
         int: Quadrant.
+
+    Based on: https://github.com/PG-Group-Project-Quantum-Optimization/GRPF-quantum.git
     """
 
     if f.real > 0 and f.imag >= 0:
