@@ -1,4 +1,4 @@
-from grpf_Grover import grover_one_dir
+from grpf_Grover import retry_loop
 from grpf_rect_mesh import rect_grid
 from grpf_triangulation import triangulate
 from grpf_edge_directions import directions
@@ -16,7 +16,7 @@ if __name__=="__main__":
     #grid generation
     nodes=rect_grid(x_min=-8, x_max=8, y_min=-8, y_max=8, res=1)
 
-    tolerance=1e-9
+    tolerance=1e-5
     max_iterations=100
     iterations=0
     start_event=cp.cuda.Event()
@@ -38,12 +38,11 @@ if __name__=="__main__":
             #dividing into directions
             e_alpha, e_beta, e_gama=directions(nodes, edges)
 
-            #applying grover for each direction
-            candidates_alpha=grover_one_dir(e_alpha, quadrants, "alpha")
-            candidates_beta=grover_one_dir(e_beta, quadrants, "beta")
-            candidates_gama=grover_one_dir(e_gama, quadrants, "gama")
+            groups=[(e_alpha, "alpha"), (e_beta, "beta"), (e_gama, "gama")]
 
-            all_candidates=candidates_alpha+candidates_beta+candidates_gama
+            #applying grover for all directions in retry-loop
+            all_candidates, info=retry_loop(groups, quadrants)
+            print(info)
 
         else:
             phase_diff=np.mod(quadrants[edges[:,0]]-quadrants[edges[:,1]], 4)
@@ -67,7 +66,7 @@ if __name__=="__main__":
             print("reached max operations")
             break
 
-        boundary_edges,edges_to_split=regions(triangles, all_candidates)
+        _,edges_to_split=regions(triangles, all_candidates)
 
         nodes=refine_mesh(nodes, edges_to_split)
 
@@ -76,7 +75,13 @@ if __name__=="__main__":
 
     print("Found: "+str(len(all_candidates))+" candidates")
 
-    zeros, poles=find_singularities(nodes, all_candidates, fun)
+    poles=[]
+    zeros=[]
+    boundary_regions,_=regions(triangles, all_candidates)
+    for boundary_edge in boundary_regions:
+        pole, zero=find_singularities(nodes, boundary_edge, quadrants)
+        poles.extend(pole)
+        zeros.extend(zero)
 
     print("zeros: ")
     for z, mult in zeros:

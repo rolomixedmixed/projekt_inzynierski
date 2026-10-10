@@ -20,8 +20,27 @@ def regions(triangles, candidate_edges):
         candidate_regions.extend([e1,e2,e3])
 
     edge_counts=Counter(candidate_regions)
-    boundary_edges=[edge for edge, count in edge_counts.items() if count==1]
-
     edges_to_split=list(edge_counts)
 
-    return boundary_edges, edges_to_split
+    boundary_regions=[]
+    remaining=candidate_triangles.copy()
+
+    while remaining:
+        region_edges=list(remaining.pop())
+        region_set=set(region_edges)
+        changed=True
+
+        while changed:
+            changed=False
+            for triangle in remaining.copy():
+                if any(edge in region_set for edge in triangle):
+                    region_edges.extend(triangle)
+                    region_set.update(triangle)
+                    remaining.remove(triangle)
+                    changed=True
+
+        counts=Counter(region_edges)
+        boundary=[edge for edge, count in counts.items() if count ==1]
+        boundary_regions.append(boundary)
+
+    return boundary_regions, edges_to_split

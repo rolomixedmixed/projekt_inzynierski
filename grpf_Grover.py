@@ -239,3 +239,32 @@ def grover_one_dir(edges_dir, global_quadrants, direction):
     print("direction: "+str(direction)+" found "+str(len(true_candidates))+" candidates")
 
     return true_candidates
+
+def retry_loop(groups, quadrants, max_retries=10):
+    if max_retries<1:
+        raise ValueError("Number of tries must be greater than 0")
+
+    iteration=0
+    info=[]
+
+    for _ in range(1, max_retries+1):
+        candidates=[]
+
+        iteration+=1
+
+        for edges_dir, direction in groups:
+            candidates.extend(grover_one_dir(edges_dir, quadrants, direction))
+        invalid_count=sum(abs(int(quadrants[a])-int(quadrants[b]))!=2 for a,b in candidates)
+        info.append([iteration, len(candidates), invalid_count])
+
+        if candidates and invalid_count==0:
+            unique_edges=sorted({tuple(sorted((int(a), int(b)))) for a,b in candidates})
+            return [list(edge) for edge in unique_edges], info
+
+    return [], info
+
+
+
+
+
+
