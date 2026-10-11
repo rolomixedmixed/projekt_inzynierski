@@ -199,25 +199,12 @@ class GroverAlgorithm:
         self.workspace_mcz=None
 
 
-def grover_one_dir(edges_dir, global_quadrants, direction):
+def grover_one_dir(edges_dir, direction, grover, quadrants_b, quadrants_c):
     num_nodes=len(edges_dir)
     if num_nodes==0:
         return []
 
-    m=int(np.ceil(np.log2(num_nodes)))
-    if m<2:
-        m=2
-
-    quadrants_b=np.zeros(num_nodes, dtype=np.int32)
-    quadrants_c=np.zeros(num_nodes, dtype=np.int32)
-
-    for i, (idx_a,idx_b) in enumerate(edges_dir):
-        quadrants_b[i]=global_quadrants[idx_a]
-        quadrants_c[i]=global_quadrants[idx_b]
-
-    grover=GroverAlgorithm(m)
     counts, a_size=grover.run_for_direction(num_nodes, quadrants_b, quadrants_c)
-    grover.destroy()
 
     o_max=np.max(counts)
     if o_max==0:
@@ -246,22 +233,36 @@ def retry_loop(groups, quadrants, max_retries=10):
 
     iteration=0
     info=[]
+    prepared=[]
 
-    for _ in range(1, max_retries+1):
-        candidates=[]
-
-        iteration+=1
-
+    try:
         for edges_dir, direction in groups:
-            candidates.extend(grover_one_dir(edges_dir, quadrants, direction))
-        invalid_count=sum(abs(int(quadrants[a])-int(quadrants[b]))!=2 for a,b in candidates)
-        info.append([iteration, len(candidates), invalid_count])
+            num_nodes=len(edges_dir)
+            if num_nodes==0:
+                continue
+            m=max(2,int(np.ceil(np.log2(num_nodes))))
+            qb=quadrants[edges_dir[:,0]]
+            qc=quadrants[edges_dir[:,1]]
+            grover=GroverAlgorithm(m)
+            prepared.append((edges_dir, direction, grover, qb, qc))
 
-        if candidates and invalid_count==0:
-            unique_edges=sorted({tuple(sorted((int(a), int(b)))) for a,b in candidates})
-            return [list(edge) for edge in unique_edges], info
+        for iteration in range(1, max_retries+1):
+            candidates=[]
+            
+            for edges_dir, direction, grover, qb, qc in prepared:
+                candidates.extend(grover_one_dir(edges_dir, direction, grover, qb, qc))
+            invalid_count=sum(abs(int(quadrants[a])-int(quadrants[b]))!=2 for a,b in candidates)
+            info.append([iteration, len(candidates), invalid_count])
 
-    return [], info
+            if candidates and invalid_count==0:
+                unique_edges=sorted({tuple(sorted((int(a), int(b)))) for a,b in candidates})
+                return [list(edge) for edge in unique_edges], info
+            
+        return [], info
+    
+    finally:
+        for edges_dir, direction, grover, qb, qc in prepared:
+            grover.destroy()
 
 
 

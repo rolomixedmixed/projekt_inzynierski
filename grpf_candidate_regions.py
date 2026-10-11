@@ -1,10 +1,10 @@
 import numpy as np
 from collections import Counter
 
-def regions(triangles, candidate_edges):
+def regions(triangles, candidate_edges, build_boundary=True):
 
     candidate_triangles=[]
-    candidate_set=set(tuple(e) for e in candidate_edges)
+    candidate_set=set(tuple(sorted(e)) for e in candidate_edges)
 
     for triangle in triangles:
         a,b,c=triangle
@@ -23,24 +23,24 @@ def regions(triangles, candidate_edges):
     edges_to_split=list(edge_counts)
 
     boundary_regions=[]
-    remaining=candidate_triangles.copy()
+    if build_boundary:
+        remaining=candidate_triangles.copy()
+        while remaining:
+            region_edges=list(remaining.pop())
+            region_set=set(region_edges)
+            changed=True
 
-    while remaining:
-        region_edges=list(remaining.pop())
-        region_set=set(region_edges)
-        changed=True
+            while changed:
+                changed=False
+                for triangle in remaining.copy():
+                    if any(edge in region_set for edge in triangle):
+                        region_edges.extend(triangle)
+                        region_set.update(triangle)
+                        remaining.remove(triangle)
+                        changed=True
 
-        while changed:
-            changed=False
-            for triangle in remaining.copy():
-                if any(edge in region_set for edge in triangle):
-                    region_edges.extend(triangle)
-                    region_set.update(triangle)
-                    remaining.remove(triangle)
-                    changed=True
-
-        counts=Counter(region_edges)
-        boundary=[edge for edge, count in counts.items() if count ==1]
-        boundary_regions.append(boundary)
+            counts=Counter(region_edges)
+            boundary=[edge for edge, count in counts.items() if count ==1]
+            boundary_regions.append(boundary)
 
     return boundary_regions, edges_to_split

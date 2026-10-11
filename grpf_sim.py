@@ -24,15 +24,15 @@ if __name__=="__main__":
 
     start_event.record()
 
+    #calculating quadrants
+    quadrants=evaluate_quadrants(nodes, fun)
+
     while True:
 
         iterations+=1
 
         #triangulation, edges
         triangles, edges=triangulate(nodes)
-
-        #calculating quadrants
-        quadrants=evaluate_quadrants(nodes, fun)
 
         if iterations==1:
             #dividing into directions
@@ -66,9 +66,15 @@ if __name__=="__main__":
             print("reached max operations")
             break
 
-        _,edges_to_split=regions(triangles, all_candidates)
+        _,edges_to_split=regions(triangles, all_candidates, build_boundary=False)
 
+        old_nodes=len(nodes)
         nodes=refine_mesh(nodes, edges_to_split)
+
+        new_nodes=nodes[old_nodes:]
+        if len(new_nodes)>0:
+            new_quadrants=evaluate_quadrants(new_nodes, fun)
+            quadrants=np.concatenate((quadrants, new_quadrants))
 
     end_event.record()
     end_event.synchronize()
